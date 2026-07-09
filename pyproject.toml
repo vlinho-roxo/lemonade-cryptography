@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lemonade-cryptography"
+version = "1.0.0"
+description = "Lightweight byte-oriented encryption library."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+
+authors = [
+    {name="Vlinho"}
+]
+
+keywords = [
+    "cryptography",
+    "encryption",
+    "experimental"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
+
+[tool.setuptools]
+packages = ["lemonade"]
