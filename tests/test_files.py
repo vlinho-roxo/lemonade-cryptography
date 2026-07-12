@@ -121,7 +121,7 @@ def test_encrypt_with_existing_sourkey(tmp_path):
     data = b"Testing sourkey"
 
     encrypt_to_file(
-        data.decode(),
+        data,
         str(tmp_path)
     )
 

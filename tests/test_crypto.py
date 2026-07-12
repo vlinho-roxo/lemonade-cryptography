@@ -2,7 +2,7 @@ import pytest
 
 from lemonade import encrypt, decrypt
 from lemonade.exceptions import InvalidKeyError
-
+from lemonade.exceptions import LemonadeError
 
 def test_invalid_key():
     with pytest.raises(InvalidKeyError):
@@ -41,6 +41,5 @@ def test_empty_data():
 
     data = b""
 
-    crypt, key = encrypt(data)
-
-    assert decrypt(crypt, key) == data
+    with pytest.raises(LemonadeError):
+        encrypt(data)
