@@ -8,3 +8,15 @@ class InvalidKeyError(LemonadeError):
 
 class InvalidCipherError(LemonadeError):
     pass
+
+
+class InvalidPathError(LemonadeError):
+    pass
+
+
+class InvalidLemonFileError(LemonadeError):
+    pass
+
+
+class InvalidSourkeyFileError(LemonadeError):
+    pass
