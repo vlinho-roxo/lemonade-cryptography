@@ -87,6 +87,107 @@ def encrypt_to_file(
     with open(sourkey_path, "wb") as file:
         file.write(SOURKEY_MAGIC)
         file.write(key_bytes)
+        
+        
+def encrypt_with_sourkey_to_file(
+    data_bytes: bytes,
+    lemonDirectory: str,
+    sourkeyFilePath: str
+) -> None:
+    """
+    Encrypts binary data using an existing .sourkey file and creates a .lemon file.
+
+    This function reads an existing Lemonade sourkey file, extracts the stored
+    encryption key, encrypts the provided data using that key, and saves the
+    encrypted result as a .lemon file.
+
+    The encryption process uses the key stored in the .sourkey file:
+
+        C = (M - K) mod 256
+
+    Where:
+        C = encrypted byte
+        M = original data byte
+        K = key byte
+
+    If the key is shorter than the input data, the key bytes are repeated
+    cyclically during encryption.
+
+    The generated .lemon file contains:
+
+        LEMON_MAGIC + encrypted data
+
+    Args:
+        data_bytes (bytes):
+            Binary data to be encrypted.
+
+        lemonDirectory (str):
+            Directory where the generated .lemon file will be saved.
+
+        sourkeyFilePath (str):
+            Path to the existing .sourkey file containing the encryption key.
+
+    Returns:
+        None
+
+    Raises:
+        LemonadeError:
+            When the input data or paths are invalid.
+
+        InvalidPathError:
+            When the provided directory or file path does not exist or
+            has an invalid type.
+
+        InvalidSourkeyFileError:
+            When the provided .sourkey file does not contain a valid
+            Lemonade sourkey header.
+    """
+    
+    if not isinstance(data_bytes, bytes):
+        raise e.LemonadeError(
+            "Data must be bytes."
+        )
+        
+    if not isinstance(lemonDirectory, str):
+        raise e.LemonadeError(
+            ".lemon directory path must be a string."
+        )
+        
+    if not isinstance(sourkeyFilePath, str):
+        raise e.LemonadeError(
+            ".sourkey file path must be a string."
+        )
+        
+    if not os.path.isdir(lemonDirectory):
+        raise e.InvalidPathError(
+            ".lemon directory path must be a valid directory."
+        )
+        
+    if not os.path.isfile(sourkeyFilePath):
+        raise e.InvalidPathError(
+            ".sourkey file path must be a valid file."
+        )
+        
+    lemon_path = u._get_available_filename(
+        lemonDirectory,
+        "lemonade.lemon"
+    )
+    
+    with open(sourkeyFilePath, "rb") as file:
+        magic = file.read(len(SOURKEY_MAGIC))
+
+        if magic != SOURKEY_MAGIC:
+            raise e.InvalidSourkeyFileError(
+                "Invalid .sourkey file."
+            )
+
+        key_bytes = file.read()
+    
+    crypt_bytes = c.encrypt_with_key(data_bytes, key_bytes)
+    
+    with open(lemon_path, "wb") as file:
+        file.write(LEMON_MAGIC)
+        file.write(crypt_bytes)
 
 
 def decrypt_from_file(

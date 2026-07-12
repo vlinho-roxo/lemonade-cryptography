@@ -37,17 +37,81 @@ def encrypt(
 
     if not isinstance(data_bytes, bytes):
         raise e.LemonadeError(
-            "Message must be bytes."
+            "Data must be bytes."
         )
 
-    key_bytes = secrets.token_bytes(len(data_bytes))
+    key_bytes = generate_key(len(data_bytes))
 
-    crypt_bytes = bytes(
-        (data_bytes[i] - key_bytes[i]) % 256
-        for i in range(len(data_bytes))
-    )
+    crypt_bytes = encrypt_with_key(data_bytes, key_bytes)
 
     return crypt_bytes, key_bytes
+
+
+def encrypt_with_key(
+    data_bytes: bytes,
+    key_bytes: bytes
+) -> bytes:
+    """
+    Encrypts binary data using a provided key.
+
+    Lemonade Encryption performs byte-wise modular subtraction:
+
+        C = (M - K) mod 256
+
+    If the provided key is shorter than the data, the key bytes are
+    repeated cyclically until the complete data length is reached.
+
+    Example:
+
+        Data:
+        ABCDEFG
+
+        Key:
+        XYZ
+
+        Used key:
+        XYZXYZX
+
+
+    Args:
+        data_bytes (bytes):
+            Binary data to encrypt.
+
+        key_bytes (bytes):
+            Encryption key.
+
+    Returns:
+        bytes:
+            Encrypted data.
+
+    Raises:
+        LemonadeError:
+            When data or key are invalid.
+    """
+
+    if not isinstance(data_bytes, bytes):
+        raise e.LemonadeError(
+            "Data must be bytes."
+        )
+        
+    if not isinstance(key_bytes, bytes):
+        raise e.LemonadeError(
+            "Key must be bytes."
+        )
+
+    if len(key_bytes) == 0:
+        raise e.LemonadeError(
+            "Key cannot be empty."
+        )
+        
+    crypt_bytes = bytes(
+        (
+            data_bytes[i] - key_bytes[i % len(key_bytes)]
+        ) % 256
+        for i in range(len(data_bytes))
+    )
+    
+    return crypt_bytes
 
 
 def decrypt(
@@ -116,3 +180,38 @@ def decrypt(
         ) from error
 
     return data_bytes
+
+
+def generate_key(
+    length: int
+) -> bytes:
+    """
+    Generates a random encryption key.
+
+    The generated key consists of cryptographically secure random bytes
+    using Python's secrets module.
+
+    Args:
+        length (int):
+            Number of bytes to generate.
+
+    Returns:
+        bytes:
+            Randomly generated key.
+
+    Raises:
+        LemonadeError:
+            When the length is invalid.
+    """
+
+    if not isinstance(length, int):
+        raise e.LemonadeError(
+            "Length must be integer."
+        )
+        
+    if length <= 0:
+        raise e.LemonadeError(
+            "Length cannot be less than or equal to zero."
+        )
+        
+    return secrets.token_bytes(length)
