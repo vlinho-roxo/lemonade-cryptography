@@ -2,13 +2,13 @@
 
 **Lemonade Cryptography** is a lightweight byte-oriented encryption library based on modular arithmetic and symmetric key transformations.
 
-Lemonade transforms readable messages into encrypted data by converting text into bytes and applying mathematical operations using a cryptographic key.
+Lemonade transforms binary data into encrypted data by applying mathematical operations between data bytes and cryptographic key bytes.
 
 The core concept is:
 
-> Each byte of the message is encrypted by subtracting it from a corresponding byte of a secret key.
+> Each byte of the data is encrypted by subtracting it from a corresponding byte of a secret key.
 
-The original message can be recovered by applying the reverse operation using the same key.
+The original data can be recovered by applying the reverse operation using the same key.
 
 ---
 
@@ -27,7 +27,7 @@ pip install lemonade-cryptography
 ```python
 from lemonade import encrypt, decrypt
 
-message = "Hello. We are looking for highly intelligent individuals."
+message = b"Hello. We are looking for highly intelligent individuals."
 
 crypt, key = encrypt(message)
 
@@ -47,13 +47,13 @@ Output:
 
 ```
 Encrypted:
-<encrypted data>
+<encrypted bytes>
 
 Key:
-<secret key>
+<secret key bytes>
 
 Decrypted:
-Hello. We are looking for highly intelligent individuals.
+b'Hello. We are looking for highly intelligent individuals.'
 ```
 
 ---
@@ -62,11 +62,12 @@ Hello. We are looking for highly intelligent individuals.
 
 - Symmetric key encryption
 - Byte-oriented processing
-- UTF-8 message support
+- UTF-8 compatible through byte conversion
 - Random cryptographic key generation
-- Base64 encoded output
-- Simple Python API
-- Lightweight implementation
+- Custom key encryption
+- `.lemon` encrypted file format
+- `.sourkey` key file format
+- Lightweight Python API
 
 ---
 
@@ -75,16 +76,16 @@ Hello. We are looking for highly intelligent individuals.
 ## `encrypt()`
 
 ```python
-encrypt(msg: str) -> tuple[str, str]
+encrypt(data_bytes: bytes) -> tuple[bytes, bytes]
 ```
 
-Encrypts a message and generates a random key.
+Encrypts binary data and generates a random key with the same length as the input data.
 
 ### Arguments
 
 | Argument | Type | Description |
 |-|-|-|
-| `msg` | `str` | Message to encrypt |
+| `data_bytes` | `bytes` | Data to encrypt |
 
 ### Returns
 
@@ -92,17 +93,58 @@ A tuple containing:
 
 ```python
 (
-    encrypted_message,
+    encrypted_data,
     encryption_key
 )
 ```
 
-Both values are encoded using Base64.
-
 Example:
 
 ```python
-crypt, key = encrypt("Hello")
+crypt, key = encrypt(b"Hello")
+```
+
+---
+
+## `encrypt_with_key()`
+
+```python
+encrypt_with_key(
+    data_bytes: bytes,
+    key_bytes: bytes
+) -> bytes
+```
+
+Encrypts binary data using an existing key.
+
+If the key is shorter than the data, the key bytes are repeated cyclically.
+
+Example:
+
+```
+Data:
+ABCDEFG
+
+Key:
+XYZ
+
+Used key:
+XYZXYZX
+```
+
+### Arguments
+
+| Argument | Type | Description |
+|-|-|-|
+| `data_bytes` | `bytes` | Data to encrypt |
+| `key_bytes` | `bytes` | Existing encryption key |
+
+### Returns
+
+Encrypted data:
+
+```python
+bytes
 ```
 
 ---
@@ -110,30 +152,97 @@ crypt, key = encrypt("Hello")
 ## `decrypt()`
 
 ```python
-decrypt(crypt: str, key: str) -> str
+decrypt(
+    crypt_bytes: bytes,
+    key_bytes: bytes
+) -> bytes
 ```
 
-Decrypts a Lemonade encrypted message using its key.
+Decrypts Lemonade encrypted data using its key.
 
 ### Arguments
 
 | Argument | Type | Description |
 |-|-|-|
-| `crypt` | `str` | Encrypted message in Base64 |
-| `key` | `str` | Encryption key in Base64 |
+| `crypt_bytes` | `bytes` | Encrypted data |
+| `key_bytes` | `bytes` | Encryption key |
 
 ### Returns
 
-The original message:
+The original data:
 
 ```python
-str
+bytes
 ```
 
 Example:
 
 ```python
 message = decrypt(crypt, key)
+```
+
+---
+
+## `generate_key()`
+
+```python
+generate_key(length: int) -> bytes
+```
+
+Generates a cryptographically secure random key.
+
+### Arguments
+
+| Argument | Type | Description |
+|-|-|-|
+| `length` | `int` | Number of bytes |
+
+### Returns
+
+Generated key:
+
+```python
+bytes
+```
+
+---
+
+# File Processing
+
+Lemonade supports its own encrypted file formats.
+
+## `.lemon`
+
+Contains encrypted data.
+
+Structure:
+
+```
+LEMON_MAGIC
+encrypted bytes
+```
+
+## `.sourkey`
+
+Contains encryption keys.
+
+Structure:
+
+```
+SOURKEY_MAGIC
+key bytes
+```
+
+A `.sourkey` file can be reused to encrypt multiple data sources.
+
+Example:
+
+```python
+encrypt_with_sourkey_to_file(
+    data,
+    "output_directory",
+    "key.sourkey"
+)
 ```
 
 ---
@@ -161,7 +270,7 @@ Where:
 | Symbol | Meaning |
 |-|-|
 | `C` | Encrypted byte |
-| `M` | Original message byte |
+| `M` | Original data byte |
 | `K` | Key byte |
 
 The decryption operation reverses the transformation:
@@ -184,7 +293,7 @@ Lemonade Cryptography is an experimental encryption library created for educatio
 
 It is not intended to replace modern cryptographic standards such as AES or ChaCha20 in security-critical systems.
 
-Always protect your encryption keys. Without the correct key, encrypted messages cannot be recovered.
+Always protect your encryption keys. Without the correct key, encrypted data cannot be recovered.
 
 ---
 

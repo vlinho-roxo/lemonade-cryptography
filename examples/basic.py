@@ -1,6 +1,7 @@
 from lemonade import encrypt, decrypt
 
-message = "Hello Lemonade!"
+
+message = b"Hello Lemonade!"
 
 crypt, key = encrypt(message)
 
