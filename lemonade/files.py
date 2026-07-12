@@ -263,3 +263,61 @@ def decrypt_from_file(
         key_bytes = file.read()
 
     return c.decrypt(crypt_bytes, key_bytes)
+
+
+def generate_sourkey_file(
+    sourkeyPath: str,
+    length: int
+) -> None:
+    """
+    Generates a Lemonade .sourkey file containing a random encryption key.
+
+    The function creates a cryptographically secure random key and stores it
+    in the Lemonade sourkey file format.
+
+    The generated file structure is:
+
+        SOURKEY_MAGIC
+        Key Bytes
+
+    The SOURKEY_MAGIC sequence is used to identify the file as a valid
+    Lemonade sourkey file.
+
+    Args:
+        sourkeyPath (str):
+            Path where the .sourkey file will be created.
+
+        length (int):
+            Number of random bytes to generate for the key.
+
+    Returns:
+        None
+
+    Raises:
+        LemonadeError:
+            When the provided path or key length is invalid.
+
+        InvalidPathError:
+            When the provided path is invalid.
+    """
+
+    if not isinstance(sourkeyPath, str):
+        raise e.LemonadeError(
+            ".sourkey file path must be a string."
+        )
+
+    if not isinstance(length, int):
+        raise e.LemonadeError(
+            "Key length must be an integer."
+        )
+
+    if length <= 0:
+        raise e.LemonadeError(
+            "Key length cannot be less than or equal to zero."
+        )
+
+    key_bytes = c.generate_key(length)
+
+    with open(sourkeyPath, "wb") as file:
+        file.write(SOURKEY_MAGIC)
+        file.write(key_bytes)
