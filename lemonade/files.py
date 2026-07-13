@@ -7,16 +7,16 @@ from . import metadata as m
 
 from .version import __version__
 
-from importlib.metadata import version
-
 
 LEMON_MAGIC = b"\xF0\x9F\x8D\x8B\xF0\x9F\x94\x92"
 SOURKEY_MAGIC = b"\xF0\x9F\x8D\x8B\xF0\x9F\x94\x91"
+
 VERSION = __version__.encode("utf-8")
 
 SUPPORTED_VERSIONS = [
     VERSION
 ]
+
 
 def encrypt_to_file(
     filePath: str,
@@ -87,20 +87,36 @@ def encrypt_to_file(
         sourkeyDirectory,
         "lemonade.sourkey"
     )
-    
-    metadata = m.generate_metadata_bytes(filePath)
 
-    crypt_bytes, key_bytes = c.encrypt(data_bytes)
+    metadata = m.generate_metadata_bytes(
+        filePath
+    )
+
+    crypt_bytes, key_bytes = c.encrypt(
+        data_bytes
+    )
 
     with open(lemon_path, "wb") as file:
         file.write(LEMON_MAGIC)
-        
-        file.write(len(VERSION).to_bytes(2, "big"))
+
+        file.write(
+            len(VERSION).to_bytes(
+                2,
+                "big"
+            )
+        )
+
         file.write(VERSION)
-        
-        file.write(len(metadata).to_bytes(4, "big"))
+
+        file.write(
+            len(metadata).to_bytes(
+                4,
+                "big"
+            )
+        )
+
         file.write(metadata)
-        
+
         file.write(crypt_bytes)
 
     with open(sourkey_path, "wb") as file:
@@ -169,7 +185,9 @@ def encrypt_with_sourkey_to_file(
     )
 
     with open(sourkeyFilePath, "rb") as file:
-        magic = file.read(len(SOURKEY_MAGIC))
+        magic = file.read(
+            len(SOURKEY_MAGIC)
+        )
 
         if magic != SOURKEY_MAGIC:
             raise e.InvalidSourkeyFileError(
@@ -177,8 +195,10 @@ def encrypt_with_sourkey_to_file(
             )
 
         key_bytes = file.read()
-        
-    metadata = m.generate_metadata_bytes(filePath)
+
+    metadata = m.generate_metadata_bytes(
+        filePath
+    )
 
     crypt_bytes = c.encrypt_with_key(
         data_bytes,
@@ -187,13 +207,25 @@ def encrypt_with_sourkey_to_file(
 
     with open(lemon_path, "wb") as file:
         file.write(LEMON_MAGIC)
-        
-        file.write(len(VERSION).to_bytes(2, "big"))
+
+        file.write(
+            len(VERSION).to_bytes(
+                2,
+                "big"
+            )
+        )
+
         file.write(VERSION)
-        
-        file.write(len(metadata).to_bytes(4, "big"))
+
+        file.write(
+            len(metadata).to_bytes(
+                4,
+                "big"
+            )
+        )
+
         file.write(metadata)
-        
+
         file.write(crypt_bytes)
         
 
@@ -205,10 +237,6 @@ def decrypt_from_file(
     """
     Decrypts a Lemonade file and recreates the original file.
 
-    Reads a .lemon file and its corresponding .sourkey file,
-    extracts metadata, decrypts the content, and restores the
-    original file using its original filename.
-
     Args:
         lemonFilePath (str):
             Path to the .lemon file.
@@ -218,13 +246,6 @@ def decrypt_from_file(
 
         outputDirectory (str):
             Directory where the restored file will be created.
-
-    Raises:
-        LemonadeError:
-            When paths have invalid types.
-
-        InvalidPathError:
-            When paths do not exist.
     """
 
     if not isinstance(lemonFilePath, str):
@@ -257,15 +278,17 @@ def decrypt_from_file(
             "Output directory must be a valid directory."
         )
 
-
     with open(lemonFilePath, "rb") as file:
 
-        magic = file.read(len(LEMON_MAGIC))
+        magic = file.read(
+            len(LEMON_MAGIC)
+        )
 
         if magic != LEMON_MAGIC:
             raise e.InvalidLemonFileError(
                 "Invalid .lemon file."
             )
+
 
         version_size_bytes = file.read(2)
 
@@ -279,12 +302,20 @@ def decrypt_from_file(
             "big"
         )
 
-        file_version = file.read(version_size)
-    
+        file_version = file.read(
+            version_size
+        )
+
+        if len(file_version) != version_size:
+            raise e.InvalidLemonFileError(
+                "Invalid version data."
+            )
+
         if file_version not in SUPPORTED_VERSIONS:
             raise e.UnsupportedVersionError(
                 "Unsupported Lemonade file version."
             )
+
 
         metadata_size_bytes = file.read(4)
 
@@ -294,11 +325,18 @@ def decrypt_from_file(
             )
 
         metadata_size = int.from_bytes(
-            file.read(4),
+            metadata_size_bytes,
             "big"
         )
 
-        metadata_bytes = file.read(metadata_size)
+        metadata_bytes = file.read(
+            metadata_size
+        )
+
+        if len(metadata_bytes) != metadata_size:
+            raise e.InvalidLemonFileError(
+                "Incomplete metadata section."
+            )
 
         fields = m.read_metadata(
             metadata_bytes
@@ -309,7 +347,9 @@ def decrypt_from_file(
 
     with open(sourkeyFilePath, "rb") as file:
 
-        magic = file.read(len(SOURKEY_MAGIC))
+        magic = file.read(
+            len(SOURKEY_MAGIC)
+        )
 
         if magic != SOURKEY_MAGIC:
             raise e.InvalidSourkeyFileError(
@@ -335,11 +375,14 @@ def decrypt_from_file(
             "Filename metadata not found."
         )
 
+
     filename = filename_bytes.decode(
         "utf-8"
     )
-    
-    filename = os.path.basename(filename)
+
+    filename = os.path.basename(
+        filename
+    )
 
 
     output_path = os.path.join(
