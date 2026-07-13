@@ -1,7 +1,24 @@
 import os
 
+from .metadata_type import MetadataType
+from .metadata import MetadataField
 
-def _get_available_filename(directory: str, filename: str) -> str:
+
+def _get_metadata_field(
+    fields: list[MetadataField],
+    identifier: MetadataType
+) -> bytes | None:
+    for field in fields:
+        if field.identifier == identifier:
+            return field.data
+
+    return None
+
+ 
+def _get_available_filename(
+    directory: str,
+    filename: str
+) -> str:
     """
     Generates an available file path by adding a numeric suffix.
 
