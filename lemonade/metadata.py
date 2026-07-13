@@ -1,8 +1,11 @@
 import os
 import struct
 
+from . import utils as u
+
 from dataclasses import dataclass
 from .metadata_type import MetadataType
+
 
 @dataclass
 class MetadataField:
@@ -15,6 +18,7 @@ class MetadataField:
             len(self.data).to_bytes(4, "big") +
             self.data
         )
+
 
 def generate_metadata_bytes(
     filePath: str
@@ -29,6 +33,7 @@ def generate_metadata_bytes(
         - File extension
         - File size
         - Last modification timestamp
+        - SHA256 integrity hash
 
     Metadata format:
 
@@ -62,13 +67,20 @@ def generate_metadata_bytes(
     extension = os.path.splitext(filename)[1]
     file_size = os.path.getsize(filePath)
     timestamp = os.path.getmtime(filePath)
+
+    with open(filePath, "rb") as file:
+        data_bytes = file.read()
+
+    sha256 = u._calculate_sha256(data_bytes)
     
     filename_bytes = filename.encode("utf-8")
     extension_bytes = extension.encode("utf-8")
+
     size_bytes = struct.pack(
         "Q",
         file_size
     )
+
     timestamp_bytes = struct.pack(
         "d",
         timestamp
@@ -90,6 +102,10 @@ def generate_metadata_bytes(
         MetadataField(
             MetadataType.TIMESTAMP,
             timestamp_bytes
+        ),
+        MetadataField(
+            MetadataType.SHA256,
+            sha256
         )
     ]
 

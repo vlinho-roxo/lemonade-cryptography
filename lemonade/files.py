@@ -1,5 +1,4 @@
 import os
-import hashlib as hl
 
 from . import crypto as c
 from . import exceptions as e
@@ -96,8 +95,6 @@ def encrypt_to_file(
     crypt_bytes, key_bytes = c.encrypt(
         data_bytes
     )
-    
-    sha256 = u._calculate_sha256(data_bytes) # TODO: Write the hash in the file using METADATA
 
     with open(lemon_path, "wb") as file:
         file.write(LEMON_MAGIC)
@@ -208,7 +205,6 @@ def encrypt_with_sourkey_to_file(
         key_bytes
     )
     
-    sha256 = u._calculate_sha256(data_bytes) # TODO: Write the hash in the file using METADATA
 
     with open(lemon_path, "wb") as file:
         file.write(LEMON_MAGIC)
@@ -368,6 +364,25 @@ def decrypt_from_file(
         crypt_bytes,
         key_bytes
     )
+    
+    original_hash = u._get_metadata_field(
+        fields,
+        m.MetadataType.SHA256
+    )
+
+    if original_hash is None:
+        raise e.InvalidMetadataError(
+            "SHA256 metadata not found."
+        )
+
+    calculated_hash = u._calculate_sha256(
+        data_bytes
+    )
+
+    if calculated_hash != original_hash:
+        raise e.IntegrityError(
+            "File integrity verification failed."
+        )
 
 
     filename_bytes = u._get_metadata_field(
@@ -399,11 +414,6 @@ def decrypt_from_file(
     with open(output_path, "wb") as file:
         file.write(data_bytes)
     data_bytes = c.decrypt(crypt_bytes, key_bytes)
-    
-    if u._calculate_sha256(data_bytes) == True: # TODO: Get the original hash from .lemon file using METADATA
-        return data_bytes
-    else:
-        raise e.IntegrityError("File integrity verification failed.")
 
 
 def generate_sourkey_file(

@@ -1,8 +1,11 @@
 import os
 import hashlib
 
+from .metadata_type import MetadataType
+from .metadata import MetadataField
 
-def _calculate_sha256(data: bytes) -> str:
+
+def _calculate_sha256(data: bytes) -> bytes:
     """
     Calculates the SHA-256 hash of binary data.
 
@@ -11,25 +14,26 @@ def _calculate_sha256(data: bytes) -> str:
             Data to hash.
 
     Returns:
-        str:
-            SHA-256 hash in hexadecimal.
+        bytes:
+            SHA-256 hash in raw binary format.
     """
 
     if not isinstance(data, bytes):
         raise TypeError("Data must be bytes.")
 
-    return hashlib.sha256(data).hexdigest()
+    return hashlib.sha256(data).digest()
 
 
-def _verify_sha256(data: bytes, expected_hash: str) -> bool:
+def _verify_sha256(
+    data: bytes,
+    expected_hash: bytes
+) -> bool:
     """
     Verifies the SHA-256 hash of binary data.
     """
 
     return _calculate_sha256(data) == expected_hash
 
-from .metadata_type import MetadataType
-from .metadata import MetadataField
 
 
 def _get_metadata_field(
@@ -42,11 +46,8 @@ def _get_metadata_field(
 
     return None
 
- 
-def _get_available_filename(
-    directory: str,
-    filename: str
-) -> str:
+
+def _get_available_filename(directory: str, filename: str) -> str:
     """
     Generates an available file path by adding a numeric suffix.
 
