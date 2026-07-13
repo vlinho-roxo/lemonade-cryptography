@@ -2,7 +2,7 @@
 
 ## Overview
 
-Lemonade Cryptography is a symmetric byte-oriented encryption algorithm based on modular arithmetic.
+Lemonade Cryptography is a symmetric byte-oriented transformation algorithm based on modular arithmetic.
 
 The algorithm operates directly on binary data by applying mathematical transformations between data bytes and secret key bytes.
 
@@ -51,17 +51,17 @@ Bytes:
 
 Because the algorithm operates on bytes, it can process any binary data, including:
 
-- Text
-- Images
-- Audio
-- Videos
-- Other binary files
+* Text
+* Images
+* Audio
+* Videos
+* Other binary data
 
 ---
 
 # Key Generation
 
-Lemonade generates cryptographic keys using Python's secure random generator:
+Lemonade generates random encryption keys using Python's secure random generator:
 
 ```python
 secrets.token_bytes(length)
@@ -82,13 +82,13 @@ Generated key:
 23 190 51 8 200
 ```
 
-Each byte of the data is combined with a corresponding key byte.
+Each byte of the data is combined with a corresponding key byte during encryption.
 
 ---
 
 # Encryption Process
 
-The main encryption formula is:
+The encryption formula is:
 
 ```
 C = (M - K) mod 256
@@ -96,11 +96,11 @@ C = (M - K) mod 256
 
 Where:
 
-| Symbol | Meaning |
-|-|-|
-| `C` | Ciphertext byte |
-| `M` | Data byte |
-| `K` | Key byte |
+| Symbol | Meaning            |
+| ------ | ------------------ |
+| `C`    | Ciphertext byte    |
+| `M`    | Original data byte |
+| `K`    | Key byte           |
 
 Example:
 
@@ -141,9 +141,9 @@ Modulo 256 keeps the result inside the valid byte range:
 
 # Key Repetition
 
-Lemonade supports encryption using existing keys.
+Lemonade supports encryption using keys smaller than the input data.
 
-When the provided key is smaller than the data, the key is repeated cyclically.
+When the provided key length is smaller than the data length, the key is repeated cyclically.
 
 Example:
 
@@ -158,11 +158,9 @@ Key:
 XYZ
 ```
 
-The key is reused:
+The key becomes:
 
 ```
-Used key:
-
 XYZXYZX
 ```
 
@@ -172,7 +170,7 @@ The encryption continues normally:
 C = (M - K) mod 256
 ```
 
-This allows `.sourkey` files to be reused for different encryption operations.
+This allows reusable encryption keys for multiple operations.
 
 ---
 
@@ -211,53 +209,15 @@ The process is repeated until all encrypted bytes are restored.
 
 ---
 
-# File Formats
-
-Lemonade provides custom binary file formats for encrypted data and keys.
-
----
-
-# `.lemon` Format
-
-A `.lemon` file stores encrypted data.
-
-Structure:
-
-```
-LEMON_MAGIC
-Encrypted Bytes
-```
-
-The `LEMON_MAGIC` sequence identifies the file as a valid Lemonade encrypted file.
-
----
-
-# `.sourkey` Format
-
-A `.sourkey` file stores encryption keys.
-
-Structure:
-
-```
-SOURKEY_MAGIC
-Key Bytes
-```
-
-The `SOURKEY_MAGIC` sequence identifies the file as a valid Lemonade key file.
-
-A `.sourkey` file can be reused to encrypt multiple pieces of data.
-
----
-
 # Data Flow
 
-The complete encryption process:
+The encryption process:
 
 ```
 Input Data
     |
     v
-Bytes
+Binary Bytes
     |
     +---- Encryption Key
     |
@@ -266,25 +226,20 @@ Modulo 256 Transformation
     |
     v
 Encrypted Bytes
-    |
-    +---- LEMON_MAGIC
-    |
-    v
-.lemon File
 ```
 
-Key generation:
+The decryption process:
 
 ```
-Random Length
+Encrypted Bytes
+    |
+    +---- Same Encryption Key
     |
     v
-Secure Random Bytes
-    |
-    +---- SOURKEY_MAGIC
+Inverse Modulo 256 Transformation
     |
     v
-.sourkey File
+Original Bytes
 ```
 
 ---
@@ -353,11 +308,11 @@ O(n)
 
 Previous versions of Lemonade used Base64 encoding to represent encrypted data as text.
 
-Version 1.1.0 works directly with bytes.
+Version 1.1.0 changed the internal implementation to operate directly on bytes.
 
-Base64 may still be used by applications when text representation is required, but it is not part of the core encryption algorithm.
+Base64 may still be used by applications when a text representation is required, but it is not part of the encryption algorithm.
 
-Base64 does not provide encryption. It only represents binary data as text.
+Base64 does not provide encryption. It only converts binary data into a text-compatible representation.
 
 ---
 
@@ -369,23 +324,22 @@ It should not be considered a replacement for professionally analyzed cryptograp
 
 Security depends heavily on:
 
-- Keeping the key secret
-- Using strong and appropriate keys
-- Never losing the key
-- Using the encryption process correctly
+* Keeping the key secret
+* Using appropriate key lengths
+* Never losing the key
+* Correctly handling encrypted data
 
 ---
 
 # Summary
 
-Lemonade Cryptography is a lightweight symmetric byte-based encryption system that uses:
+Lemonade Cryptography is a lightweight symmetric byte-based transformation system that uses:
 
-- Direct byte processing
-- Secure random key generation
-- Modular subtraction for encryption
-- Modular addition for decryption
-- Custom `.lemon` encrypted files
-- Custom `.sourkey` key files
-- Optional reusable keys
+* Direct byte processing
+* Secure random key generation
+* Modular subtraction for encryption
+* Modular addition for decryption
+* Cyclic key usage when required
+* Support for arbitrary binary data
 
-It provides a simple way to understand the fundamentals of key-based cryptographic transformations while supporting arbitrary binary data.
+It provides a simple way to understand the fundamentals of key-based cryptographic transformations.

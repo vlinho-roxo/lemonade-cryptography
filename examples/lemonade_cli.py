@@ -1,4 +1,5 @@
 import os
+import ast
 
 import lemonade as l
 
@@ -7,178 +8,145 @@ def press_enter():
     input("\nPress [Enter] to continue...")
 
 
+def clear():
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+def read_bytes(prompt):
+    value = input(prompt)
+
+    try:
+        result = ast.literal_eval(value)
+
+        if not isinstance(result, bytes):
+            raise ValueError
+
+        return result
+
+    except Exception:
+        print("\nInvalid bytes format.")
+        return None
+
+
 def main():
-    debug_mode = False
-    app = "2026"
+    option = ""
 
-    while app != "0":
-        os.system("cls")
+    while option != "0":
+        clear()
 
-        print("Lemonade Cryptography - Made by Vlinho")
-        print("\n    0 - Quit")
+        print("🍋 Lemonade Cryptography - Made by Vlinho")
+        print()
+        print("    0 - Quit")
+        print()
+        print(" MESSAGE")
         print("    1 - Encrypt message")
-        print("    2 - Decrypt message")
-        print("    3 - Encrypt file")
-        print("    4 - Encrypt file with .sourkey")
-        print("    5 - Decrypt .lemon file")
-        print("    6 - Generate .sourkey")
-        print(
-            "debug - Debug mode"
-            if not debug_mode
-            else "debug - Normal mode"
-        )
+        print("    2 - Encrypt message with key")
+        print("    3 - Decrypt message")
+        print()
+        print(" FILES")
+        print("    4 - Encrypt file")
+        print("    5 - Encrypt file with .sourkey")
+        print("    6 - Decrypt .lemon file")
+        print()
+        print(" KEY")
+        print("    7 - Generate .sourkey")
 
-        app = input("\n>>> ")
+        option = input("\n>>> ")
 
-        match app:
-
+        match option:
             case "0":
-                os.system("cls")
+                clear()
 
             case "1":
                 print("\nENCRYPT MESSAGE =================")
 
-                message = input(
-                    "\nMessage: "
-                ).encode("utf-8")
+                message = input("\nMessage: ").encode("utf-8")
 
                 crypt, key = l.encrypt(message)
 
-                print("\nEncrypted bytes:")
+                print("\nEncrypted:", end="")
                 print(crypt)
 
-                print("\nKey:")
+                print("\nKey:", end="")
                 print(key)
 
                 press_enter()
 
-
             case "2":
-                print("\nDECRYPT MESSAGE =================")
+                print("\nENCRYPT WITH KEY ================")
 
-                crypt = eval(
-                    input("\nEncrypted bytes: ")
-                )
+                message = input("\nMessage: ").encode("utf-8")
+                key = read_bytes("\nKey bytes: ")
 
-                key = eval(
-                    input("\nKey bytes: ")
-                )
+                crypt = l.encrypt_with_key(message, key)
 
-                result = l.decrypt(
-                    crypt,
-                    key
-                )
-
-                print("\nMessage:")
-                print(result.decode("utf-8"))
+                print("\nEncrypted:", end="")
+                print(crypt)
 
                 press_enter()
-
 
             case "3":
-                print("\nENCRYPT FILE ====================")
+                print("\nDECRYPT MESSAGE =================")
 
-                file_path = input(
-                    "\nFile path: "
-                )
+                crypt = read_bytes("\nEncrypted bytes: ")
+                key = read_bytes("\nKey bytes: ")
 
-                output_directory = input(
-                    "\nOutput directory: "
-                )
+                message = l.decrypt(crypt, key)
 
-                with open(file_path, "rb") as file:
-                    data = file.read()
-
-                l.encrypt_to_file(
-                    data,
-                    output_directory
-                )
-
-                print("\nFile encrypted.")
+                print("\nMessage: ", end="")
+                print(message.decode("utf-8"))
 
                 press_enter()
 
-
             case "4":
-                print("\nENCRYPT WITH SOURKEY ============")
+                print("\nENCRYPT FILE ====================")
 
-                file_path = input(
-                    "\nFile path: "
-                )
+                file_path = input("\nFile path: ")
+                output = input("\nOutput directory: ")
 
-                output_directory = input(
-                    "\nOutput directory: "
-                )
+                l.encrypt_to_file(file_path, output)
 
-                sourkey_path = input(
-                    "\n.sourkey path: "
-                )
+                print("\nFile encrypted successfully.")
 
-                with open(file_path, "rb") as file:
-                    data = file.read()
+                press_enter()
 
-                l.encrypt_with_sourkey_to_file(
-                    data,
-                    output_directory,
-                    sourkey_path
-                )
+            case "5":
+                print("\nENCRYPT FILE WITH SOURKEY =======")
+
+                file_path = input("\nFile path: ")
+                output = input("\nOutput directory: ")
+                sourkey = input("\n.sourkey path: ")
+
+                l.encrypt_with_sourkey_to_file(file_path, output, sourkey)
 
                 print("\nFile encrypted with sourkey.")
 
                 press_enter()
 
-
-            case "5":
+            case "6":
                 print("\nDECRYPT .LEMON FILE =============")
 
-                lemon_path = input(
-                    "\n.lemon path: "
-                )
+                lemon = input("\n.lemon path: ")
+                sourkey = input("\n.sourkey path: ")
+                output = input("\nOutput directory: ")
 
-                sourkey_path = input(
-                    "\n.sourkey path: "
-                )
+                l.decrypt_from_file(lemon, sourkey, output)
 
-                output_path = input(
-                    "\nOutput file path: "
-                )
-
-                data = l.decrypt_from_file(
-                    lemon_path,
-                    sourkey_path
-                )
-
-                with open(output_path, "wb") as file:
-                    file.write(data)
-
-                print("\nFile decrypted.")
-
+                print("\nFile restored successfully.")
+                
                 press_enter()
 
-
-            case "6":
+            case "7":
                 print("\nGENERATE SOURKEY ================")
 
-                path = input(
-                    "\nOutput .sourkey path: "
-                )
+                path = input("\nOutput .sourkey path: ")
+                length = int(input("\nKey length (bytes): "))
 
-                length = int(
-                    input("\nKey length (bytes): ")
-                )
+                l.generate_sourkey_file(path, length)
 
-                l.generate_sourkey_file(
-                    path,
-                    length
-                )
-
-                print("\nSourkey generated.")
+                print("\n.sourkey generated.")
 
                 press_enter()
-
-
-            case "debug":
-                debug_mode = not debug_mode
 
             case _:
                 pass
