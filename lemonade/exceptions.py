@@ -23,3 +23,6 @@ class InvalidSourkeyFileError(LemonadeError):
 
 class IntegrityError(LemonadeError):
     pass
+
+class UnsupportedVersionError(LemonadeError):
+    pass
