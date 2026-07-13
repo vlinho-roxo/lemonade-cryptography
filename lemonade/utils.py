@@ -1,4 +1,32 @@
 import os
+import hashlib
+
+
+def _calculate_sha256(data: bytes) -> str:
+    """
+    Calculates the SHA-256 hash of binary data.
+
+    Args:
+        data (bytes):
+            Data to hash.
+
+    Returns:
+        str:
+            SHA-256 hash in hexadecimal.
+    """
+
+    if not isinstance(data, bytes):
+        raise TypeError("Data must be bytes.")
+
+    return hashlib.sha256(data).hexdigest()
+
+
+def _verify_sha256(data: bytes, expected_hash: str) -> bool:
+    """
+    Verifies the SHA-256 hash of binary data.
+    """
+
+    return _calculate_sha256(data) == expected_hash
 
 
 def _get_available_filename(directory: str, filename: str) -> str:
@@ -26,6 +54,7 @@ def _get_available_filename(directory: str, filename: str) -> str:
         str:
             Available file path.
     """
+    
     name, extension = os.path.splitext(filename)
 
     n = 1

@@ -20,3 +20,6 @@ class InvalidLemonFileError(LemonadeError):
 
 class InvalidSourkeyFileError(LemonadeError):
     pass
+
+class IntegrityError(LemonadeError):
+    pass
