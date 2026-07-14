@@ -164,14 +164,9 @@ def decrypt(
             "Key must be bytes."
         )
 
-    if len(crypt_bytes) != len(key_bytes):
-        raise e.InvalidKeyError(
-            "Encryption key length does not match cipher length."
-        )
-
     try:
         data_bytes = bytes(
-            (crypt_bytes[i] + key_bytes[i]) % 256
+            (crypt_bytes[i] + key_bytes[i % len(key_bytes)]) % 256
             for i in range(len(crypt_bytes))
         )
     except IndexError as error:
