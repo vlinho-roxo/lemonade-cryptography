@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 Minor bug fix - (07/13/2026)
+
+Fix:
+
+* Decrypt function couldn't decrypt with keys shorter than cipher 
+
 ## 1.2.0 File Format Evolution - (07/13/2026)
 
 Features:
