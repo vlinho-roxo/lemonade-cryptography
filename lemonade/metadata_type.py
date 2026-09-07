@@ -6,3 +6,4 @@ class MetadataType(enum.Enum):
     SIZE      = 3
     TIMESTAMP = 4
     SHA256    = 5
+    CHUNKSIZE = 6

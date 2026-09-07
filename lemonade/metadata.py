@@ -2,6 +2,7 @@ import os
 import struct
 
 from . import utils as u
+from . import constants as c
 
 from dataclasses import dataclass
 from .metadata_type import MetadataType
@@ -11,18 +12,12 @@ from .metadata_type import MetadataType
 class MetadataField:
     identifier: MetadataType
     data: bytes
-    
+
     def encode(self) -> bytes:
-        return (
-            self.identifier.value.to_bytes(1, "big") +
-            len(self.data).to_bytes(4, "big") +
-            self.data
-        )
+        return self.identifier.value.to_bytes(1, "big") + len(self.data).to_bytes(4, "big") + self.data
 
 
-def generate_metadata_bytes(
-    filePath: str
-) -> bytes:
+def generate_metadata_bytes(filePath: str) -> bytes:
     """
     Generates binary metadata from a file.
 
@@ -34,6 +29,7 @@ def generate_metadata_bytes(
         - File size
         - Last modification timestamp
         - SHA256 integrity hash
+        - Chunk size used during encryption
 
     Metadata format:
 
@@ -62,7 +58,7 @@ def generate_metadata_bytes(
         OSError:
             When the file path is invalid or inaccessible.
     """
-    
+
     filename = os.path.basename(filePath)
     extension = os.path.splitext(filename)[1]
     file_size = os.path.getsize(filePath)
@@ -72,41 +68,20 @@ def generate_metadata_bytes(
         data_bytes = file.read()
 
     sha256 = u._calculate_sha256(data_bytes)
-    
+
     filename_bytes = filename.encode("utf-8")
     extension_bytes = extension.encode("utf-8")
+    size_bytes = struct.pack("Q", file_size)
+    timestamp_bytes = struct.pack("d", timestamp)
+    chunk_size_bytes = struct.pack("Q", c.CHUNK_SIZE)
 
-    size_bytes = struct.pack(
-        "Q",
-        file_size
-    )
-
-    timestamp_bytes = struct.pack(
-        "d",
-        timestamp
-    )
-    
     fields = [
-        MetadataField(
-            MetadataType.FILENAME,
-            filename_bytes
-        ),
-        MetadataField(
-            MetadataType.EXTENSION,
-            extension_bytes
-        ),
-        MetadataField(
-            MetadataType.SIZE,
-            size_bytes
-        ),
-        MetadataField(
-            MetadataType.TIMESTAMP,
-            timestamp_bytes
-        ),
-        MetadataField(
-            MetadataType.SHA256,
-            sha256
-        )
+        MetadataField(MetadataType.FILENAME, filename_bytes),
+        MetadataField(MetadataType.EXTENSION, extension_bytes),
+        MetadataField(MetadataType.SIZE, size_bytes),
+        MetadataField(MetadataType.TIMESTAMP, timestamp_bytes),
+        MetadataField(MetadataType.SHA256, sha256),
+        MetadataField(MetadataType.CHUNKSIZE, chunk_size_bytes)
     ]
 
     metadata = b""
@@ -117,9 +92,7 @@ def generate_metadata_bytes(
     return metadata
 
 
-def read_metadata(
-    metadata_bytes: bytes
-) -> list[MetadataField]:
+def read_metadata(metadata_bytes: bytes) -> list[MetadataField]:
     """
     Reads binary metadata and converts it into MetadataField objects.
 
@@ -133,35 +106,18 @@ def read_metadata(
     """
 
     fields = []
-
     offset = 0
 
     while offset < len(metadata_bytes):
-
-        identifier = MetadataType(
-            metadata_bytes[offset]
-        )
-
+        identifier = MetadataType(metadata_bytes[offset])
         offset += 1
 
-        data_size = int.from_bytes(
-            metadata_bytes[offset:offset + 4],
-            "big"
-        )
-
+        data_size = int.from_bytes(metadata_bytes[offset:offset + 4], "big")
         offset += 4
 
-        data = metadata_bytes[
-            offset:offset + data_size
-        ]
-
+        data = metadata_bytes[offset:offset + data_size]
         offset += data_size
 
-        fields.append(
-            MetadataField(
-                identifier,
-                data
-            )
-        )
+        fields.append(MetadataField(identifier, data))
 
     return fields
